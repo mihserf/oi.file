@@ -371,7 +371,7 @@ angular.module('oi.file', [])
             delete uObj.item[opts.fileUploading];
             
             scope.$apply(function () {
-              if (xhr.status === 200 || xhr.status === 201 && response) {
+              if ((xhr.status === 200 || xhr.status === 201) && response) {
                 angular.extend(uObj.item, response);
                 uObj.deferred.resolve(xhr);
                 
