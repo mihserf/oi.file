@@ -17,7 +17,6 @@ angular.module('oi.file', [])
     //Processing of selected files
     change: function (file) {
       //Uploading after addition by default
-      //По умолчанию загружаем файл сразу после добавления
       file.$upload(this.url, {});
     },
     
@@ -94,7 +93,6 @@ angular.module('oi.file', [])
   .directive('oiFile', ['oiFileConfig', '$q', '$compile', '$timeout', function (oiFileConfig, $q, $compile, $timeout) {
   
     //Uploading queue. Taken out separately, because it make files downloading easy and solves the problem of circular references to xhr
-    //Очередь файлов для загрузки. Вынесена отдельно, т.к. упрощает поочередную загрузку фалов и решает проблему циклических ссылок на xhr
     var queue = [];
     
     return {
@@ -132,7 +130,6 @@ angular.module('oi.file', [])
             dataTransfer.dropEffect = 'copy';
             
             //Check that you drag the file
-            //Проверяем, что перетаскиваются именно файлы
             if (dataTransfer && dataTransfer.types) {
                 if (dataTransfer.types instanceof Array) {
                     dataTransfer.types.indexOf('Files') >= 0 ? element.addClass(opts.fileClass) : element.addClass(opts.notFileClass);
@@ -182,7 +179,6 @@ angular.module('oi.file', [])
             scope.$apply(function (scope) {
               for (var i = 0, n = files.length; i < n; i++) {
                 //Create a file object to be combined with a model
-                //Создаем объект файла для объединения с моделью
                 var file = {
                   $upload: _upload,
                   $preview: _preview,
@@ -197,7 +193,6 @@ angular.module('oi.file', [])
                 file[opts.fileUploading] = true;
 
                 //Pass each file into a function that uploads it
-                //Передаем каждый файл в функцию, которая отправит его на загрузку
                 opts.change(file);
               }
             });
@@ -232,7 +227,6 @@ angular.module('oi.file', [])
             
           } else if (typeof opts.preview === 'function') {
             //Reading files is not supported
-            //Чтение файлов не поддерживается
             previewDeferred.reject(opts.setError('preview', {item: item, response: null}))
           }
           
@@ -256,19 +250,16 @@ angular.module('oi.file', [])
           }
           
           //Collect all the necessary data to load into a single object and place it in the queue
-          //Собираем все необходимые для загрузки данные в один объект и помещаем его в очередь
           var uploadObject = {
             url:      url,
             item:     item,
             deferred: uploadDeferred,
             xhr: undefined //reference to xhr store in queue, but not in the file model (item), to avoid circular references, because xhr contains a reference to item
-                           //ссылку на xhr храним в очереди, а не в модели файла (item), чтобы избежать циклической ссылки, т.к. в xhr хранится ссылка на item
-                           //otherwise, an error: //иначе возникает ошибка: (Error: An attempt was made to use an object that is not, or is no longer, usable.)
+                           //otherwise, an error:  (Error: An attempt was made to use an object that is not, or is no longer, usable.)
           }
           queue.push(uploadObject);
           
           //Start downloading the addition of the first file (until download is completed the rest of the items will be added to the same queue, or will create a new queue)
-          //Начинаем загрузку при добавлении первого файла (пока загрузка не завершена остальные элементы будут добавляться в эту же очередь, иначе создастся новая очередь)
           if (queue.length === 1) {
             queue.total    = item[opts.fileSize];
             queue.loaded   = 0;
@@ -283,7 +274,6 @@ angular.module('oi.file', [])
           }
           
           //Download the following file starts when the previous loaded or aborted
-          //Загрузка следующего файла начинается когда предыдущий загружен либо отменен
           function _uploadQueue () {
             if (queue.length) {
             
@@ -291,13 +281,11 @@ angular.module('oi.file', [])
               
               queue[0].deferred.promise.finally(function () { //for AngularJS 1.2. Use all instead of finally in old versions
                 //Delete this and move on to the next element in the queue in case the download is complete or an error (including due to cancellation)
-                //Удаляем этот и переходим к следующему элементу очереди в случае завершения загрузки или ошибки (в т. ч. из-за отмены)
                 queue.shift();
                 _uploadQueue();
               })
             } else {
               //Clear the queue when all files have been uploaded
-              //Обнуляем очередь когда все файлы загружены
               delete queue.total;
               delete queue.loaded;
               delete queue.all;
@@ -311,18 +299,15 @@ angular.module('oi.file', [])
         //Cancel download
         function _abort () {
           //forEach is used for the closure for transmission each element value in setTimeout
-          //forEach используется для организации замыкания для передачи каждого элемента value в setTimeout
           angular.forEach(queue, function (value, key) {
             if (value.item === this) {
               if (value.xhr) {
                 //If you call abort without setTimeout, you get error: apply already in progress
-                //Если запустить abort напрямую возникает ошибка: apply already in progress
                 setTimeout(function () {
                   value.xhr.abort();
                 }, 0)
               } else {
                 //Remove the element from the queue that has not yet started to upload
-                //Удаляем из очереди элемент, который еще не начал загружаться
                 queue.splice(key, 1);
               }
               queue.total -= value.item[opts.fileSize];
@@ -446,7 +431,6 @@ angular.module('oi.file', [])
             scope.$apply(function () {
               if (response && !response.error) {
                 //It is impossible to know the status of loading into the frame, so we now if error when response contans error parameter
-                //Нельзя узнать статус загрузки во фрейм, поэтому ошибка определяется наличием параметра error в ответе
                 angular.extend(uObj.item, response);
                 uObj.deferred.resolve({item: uObj.item, response: response});
 
